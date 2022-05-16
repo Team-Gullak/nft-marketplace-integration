@@ -115,10 +115,11 @@ const Home = () => {
         token_id: values.tokenId,
         side: OrderSide.Sell
       })
-
+      orders.sort((a, b) => a.currentPrice - b.currentPrice);
       console.log('Sell Orders', count, orders)
+      console.log(bnToString(orders[0]?.currentPrice))
 
-      return (bnToString(orders[0].currentPrice));
+      return orders[0];
 
 
     } catch (error) {
@@ -135,7 +136,7 @@ const Home = () => {
 
       console.log('Buy Orders', count, orders)
 
-      return (bnToString(orders[0].currentPrice));
+      return (bnToString(orders[0]?.currentPrice));
     } catch (error) {
       console.error(error);
     }
@@ -145,8 +146,9 @@ const Home = () => {
   // Get page 2 of all auctions, a.k.a. orders where `side == 1`
 
   // Buying items
-  const fulfillBuyOrder = async (safeAddress) => {
+  const fulfillBuyOrder = async (safeAddress, order) => {
     try {
+
       const order = await seaport.api.getOrder({
         side: OrderSide.Sell,
         asset_contract_address: values.tokenAddress,
@@ -155,7 +157,7 @@ const Home = () => {
 
       console.log('fulfilling the orders', order)
 
-      const accountAddress = HOT_WALLET_ADDRESS  // The buyer's wallet address, also the taker
+      const accountAddress = HOT_WALLET_ADDRESS // The buyer's wallet address, also the taker
       const transactionHash = await seaport.fulfillOrder({ order, accountAddress, recipientAddress: safeAddress })
 
       console.log(transactionHash)
@@ -247,6 +249,28 @@ const Home = () => {
     }
   };
 
+  const returnFunds = async (owner) => {
+    try {
+
+      const tx = {
+        from: send_account,
+        to: to_address,
+        value: ethers.utils.parseEther(send_token_amount),
+        nonce: window.ethersProvider.getTransactionCount(send_account, "latest"),
+        gasLimit: ethers.utils.hexlify(gas_limit), // 100000
+        gasPrice: gas_price,
+      }
+
+      owner.sendTransaction(tx).then((transaction) => {
+        console.dir(transaction)
+        alert("Send finished!")
+      })
+
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
   const transactionBuy = async () => {
     const safeAddress = '0x67407721B109232BfF825F186c8066045cFefe7F';
 
@@ -257,9 +281,10 @@ const Home = () => {
 
     try {
 
-      const buyPrice = await getSellOrder();
+      const order = await getSellOrder();
+      const buyPrice = bnToString(order.currentPrice);
+
       if (!buyPrice) { return }
-      console.log({ buyPrice });
       alert(`Buy Price: ${buyPrice}`);
 
       const owner = new ethers.Wallet(
@@ -300,9 +325,7 @@ const Home = () => {
       await executeTxResponse.transactionResponse.wait();
       console.log(executeTxResponse);
 
-      await fulfillBuyOrder(safeAddress);
-
-      alert('Successfully baught the nft!')
+      await fulfillBuyOrder(safeAddress, order);
 
     } catch (err) {
       console.error(err);
@@ -398,6 +421,8 @@ const Home = () => {
 
       <button onClick={createSafe}>Create Safe</button>
       <button onClick={getAsset}>Get Asset</button>
+      <button onClick={getBuyOrder}>Get Buy Orders</button>
+      <button onClick={getSellOrder}>Get Sell Orders</button>
       <button onClick={transactionBuy}>Create Transaction to buy</button>
       <button onClick={transactionSell}>Create Transaction to sell</button>
     </div>
