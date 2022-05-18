@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react'
 import { ethers } from 'ethers'
 
 const Socket = () => {
-    const [values, setValues] = useState({ fromChainId: "", toChainId: "1", fromToken: '', toToken: '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee', amount: '' });
+    const [values, setValues] = useState({ fromChainId: "137", toChainId: "1", fromToken: '0x2791bca1f2de4661ed88a30c99a7a9449aa84174', toToken: '0xdac17f958d2ee523a2206206994597c13d831ec7', amount: '1000' });
     const API_KEY = '645b2c8c-5825-4930-baf3-d9b997fcd88c';
     // const userAddress = '0xd232979ed3fc90a331956C4e541815b478116a7D';
     const [userAddress, setuserAddress] = useState('')
@@ -61,13 +61,18 @@ const Socket = () => {
 
         try {
 
-            const options = { method: 'GET', headers: { 'API-KEY': '645b2c8c-5825-4930-baf3-d9b997fcd88c', 'Accept': 'application/json', 'Content-Type': 'application/json', } };
+            const options = {
+                method: 'GET', headers: {
+                    'API-KEY': '645b2c8c-5825-4930-baf3-d9b997fcd88c', 'Accept': 'application/json', 'Content-Type': 'application/json'
+                }
+            };
 
             const res = await fetch(`https://backend.movr.network/v2/quote?fromChainId=${values.fromChainId}&fromTokenAddress=${values.fromToken}&toChainId=${values.toChainId}&toTokenAddress=${values.toToken}&fromAmount=${values.amount}&userAddress=${userAddress}&uniqueRoutesPerBridge=true&sort=gas&singleTxOnly=true`, options)
 
             const data = await res.json();
             setBestRoute(data.result.routes[0])
             console.log('QUOTE', data);
+            if (quote.result.routes[0] == undefined) throw new Error("No routes found");
             console.log('Best Route', data.result.routes[0]);
 
             return data.result.routes[0];
@@ -78,8 +83,8 @@ const Socket = () => {
     }
 
     // Makes a POST request to Socket APIs for transaction data
-    const buildTx = async (route) => {
-        // const route = await quote();
+    const buildTx = async () => {
+        const route = await getQuote();
         try {
             const options = { method: 'POST', headers: { 'API-KEY': '645b2c8c-5825-4930-baf3-d9b997fcd88c', 'Accept': 'application/json', 'Content-Type': 'application/json', }, body: JSON.stringify({ "route": route }) };
 
