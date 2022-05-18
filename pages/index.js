@@ -234,7 +234,7 @@ const Home = () => {
       console.log('SafeFactory Deployed')
 
       const newSafeAddress = safeSdk.getAddress();
-      console.log('newSafeAddress', newSafeAddress)
+      console.log('newSafeAddress', newSafeAddress) 
 
 
       const sdk = await Safe.create({
