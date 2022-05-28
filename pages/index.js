@@ -325,6 +325,7 @@ const Home = () => {
       await executeTxResponse.transactionResponse.wait();
       console.log(executeTxResponse);
 
+      const status = 
       await fulfillBuyOrder(safeAddress, order);
 
     } catch (err) {
